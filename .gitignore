@@ -6,3 +6,11 @@ app/dist/
 scraper/raw-state/
 scraper/raw-state-*/
 scraper/raw/
+
+# scratch / recon artifacts (audit cleanup 2026-08-28)
+20??-??-??_*.jpg
+*.bak
+scraper/recon-*
+scraper/**/recon/
+scraper/*match_timings*
+scraper/*-now.mjs

@@ -1,12 +1,13 @@
 -- Run this once in the Supabase SQL editor after creating the project.
--- Single-row store for the live tournament state; readable by anyone, writable
--- only via the service-role key (used by the /api/state serverless function).
+-- One row per division (D1-D4 = id 1..4); readable by anyone, writable only via
+-- the service-role key (used by the /api/state serverless function). NOTE: this
+-- was originally a single-row store (check id = 1); production carries four rows.
 
 create table if not exists public.tennis_state (
-  id          int primary key default 1,
+  id          int primary key,
   data        jsonb not null,
   updated_at  timestamptz not null default now(),
-  check (id = 1)
+  check (id between 1 and 4)
 );
 
 alter table public.tennis_state enable row level security;

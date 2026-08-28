@@ -99,8 +99,13 @@ to `/` so /view works.
 
 ## Admin login
 
-Default `admin` / `tennis`. Override via Vercel env vars
-`VITE_ADMIN_USER` and `VITE_ADMIN_PASS`.
+Editing the bracket requires the `ADMIN_PASS` env var, set **server-side** in
+Vercel. There is **no default** — if `ADMIN_PASS` is unset the admin gate fails
+closed and nobody can write. The password is checked in `app/api/state.js` with
+a timing-safe compare against the `x-admin-password` header and is never shipped
+in the client bundle. The viewer at `/` is public and needs no login.
+(There are no `VITE_ADMIN_USER` / `VITE_ADMIN_PASS` vars — that was an earlier
+client-side design that no longer exists.)
 
 ## Known nits
 
