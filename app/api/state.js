@@ -3,12 +3,15 @@
 // - Writes via SUPABASE_SERVICE_ROLE_KEY, bypassing RLS.
 // - GET with valid password = auth check (used by Gate.jsx). POST = upsert state.
 import { createClient } from '@supabase/supabase-js'
+import { clientIp, checkLock, recordFailure, recordSuccess } from './throttle.js'
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   { auth: { persistSession: false } }
 )
+
+const LOGIN_ATTEMPTS = 'tennis_login_attempts'
 
 function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false
@@ -28,9 +31,20 @@ function isAuthed(req) {
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
 
+  // Brute-force lockout on the admin password (per client IP): 5 failed
+  // attempts in a 15-minute window -> 15-minute lockout. A correct password
+  // resets the counter, so a legit admin never trips it.
+  const key = `ip:${clientIp(req)}`
+  const lock = await checkLock(supabase, LOGIN_ATTEMPTS, key)
+  if (lock.locked) {
+    return res.status(429).json({ error: `Too many attempts. Try again in ${Math.ceil(lock.retryAfterSec / 60)} min.` })
+  }
+
   if (!isAuthed(req)) {
+    await recordFailure(supabase, LOGIN_ATTEMPTS, key)
     return res.status(401).json({ error: 'Unauthorized' })
   }
+  await recordSuccess(supabase, LOGIN_ATTEMPTS, key)
 
   if (req.method === 'GET') {
     return res.status(200).json({ ok: true })

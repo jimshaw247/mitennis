@@ -65,7 +65,11 @@ export default function Gate({ onUnlock }) {
         <button type="submit" disabled={busy} className="w-full px-3 py-2 rounded bg-blue-600 text-white text-sm font-semibold disabled:opacity-60">
           {busy ? 'Checking…' : 'Unlock'}
         </button>
+        <div className="text-[10px] text-slate-600 text-center pt-1">{BUILD}</div>
       </form>
     </div>
   )
 }
+
+// Discreet build stamp (set at build time in vite.config.js).
+const BUILD = typeof __BUILD__ !== 'undefined' ? __BUILD__ : 'dev'
